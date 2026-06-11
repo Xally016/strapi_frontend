@@ -11,9 +11,25 @@ headers={
 
 st.set_page_config(page_title="Gezi Rehberi", page_icon="🍁", layout="centered")
 
-st.title="Dinamik Gezi Rehberi"
-st.markdown="Bu web site Strapi ve Streamlit kullanılarak oluşturulmuştur."
+st.title("Dinamik Gezi Rehberi")
+st.markdown("Bu web site Strapi ve Streamlit kullanılarak oluşturulmuştur.")
 
+st.divider()
+
+# Dil Seçimi
+col1, col2, col3 = st.columns(3)
+with col1:
+    if st.button("🇹🇷 Türkçe", use_container_width=True):
+        st.session_state.dil = "TR"
+with col2:
+    if st.button("🇬🇧 English", use_container_width=True):
+        st.session_state.dil = "EN"
+
+# Başlangıç dili ayarı
+if "dil" not in st.session_state:
+    st.session_state.dil = "TR"
+
+dil = st.session_state.dil
 st.divider()
 
 @st.cache_data
@@ -33,8 +49,13 @@ if not articles:
     st.warning("Herhangi bir içerik bulunamadı")
 else:
     for a in articles:
-        baslik=a.get("Baslik","Başlıksız Makale")
-        icerik=a.get("Icerik2","İçeriksiz makale")
+        # Dile göre başlık ve içerik seçimi
+        if dil == "TR":
+            baslik = a.get("Baslik", "Başlıksız Makale")
+            icerik = a.get("Icerik2", "İçeriksiz makale")
+        else:  # English
+            baslik = a.get("Title", a.get("Baslik", "Untitled Article"))
+            icerik = a.get("Content", a.get("Icerik2_EN", a.get("Icerik2", "No content available")))
 
         with st.expander(f"{baslik}"):
             st.write(icerik)
