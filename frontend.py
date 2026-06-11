@@ -11,33 +11,44 @@ headers={
 
 st.set_page_config(page_title="Gezi Rehberi", page_icon="🍁", layout="centered")
 
-st.title("Dinamik Gezi Rehberi")
-st.markdown("Bu web site Strapi ve Streamlit kullanılarak oluşturulmuştur.")
-
-st.divider()
-
-# Dil Seçimi
-col1, col2, col3 = st.columns(3)
-with col1:
-    if st.button("🇹🇷 Türkçe", use_container_width=True):
-        st.session_state.dil = "TR"
-with col2:
-    if st.button("🇬🇧 English", use_container_width=True):
-        st.session_state.dil = "EN"
-
-# Başlangıç dili ayarı
+# --- Başlangıç dili ayarı (butonlardan ÖNCE olmalı) ---
 if "dil" not in st.session_state:
     st.session_state.dil = "TR"
 
-dil = st.session_state.dil
+# --- Başlık ---
+if st.session_state.dil == "TR":
+    st.title("🍁 Dinamik Gezi Rehberi")
+    st.markdown("Bu web sitesi **Strapi** ve **Streamlit** kullanılarak oluşturulmuştur.")
+else:
+    st.title("🍁 Dynamic Travel Guide")
+    st.markdown("This website was built using **Strapi** and **Streamlit**.")
+
 st.divider()
+
+# --- Dil Seçimi ---
+col1, col2, col3 = st.columns([1, 1, 2])
+with col1:
+    tr_type = "primary" if st.session_state.dil == "TR" else "secondary"
+    if st.button("🇹🇷 Türkçe", use_container_width=True, type=tr_type):
+        st.session_state.dil = "TR"
+        st.rerun()
+with col2:
+    en_type = "primary" if st.session_state.dil == "EN" else "secondary"
+    if st.button("🇬🇧 English", use_container_width=True, type=en_type):
+        st.session_state.dil = "EN"
+        st.rerun()
+with col3:
+    aktif_dil = "🇹🇷 Türkçe" if st.session_state.dil == "TR" else "🇬🇧 English"
+    st.info(f"Aktif dil / Active language: **{aktif_dil}**")
+
+st.divider()
+
+dil = st.session_state.dil
 
 @st.cache_data
 def makaleleri_getir():
     url=f"{BASE_URL}/api/yazis?populate=*"
-
     res=requests.get(url, headers=headers)
-
     if res.ok:
         ham_veri=res.json().get("data",[])
         return ham_veri
@@ -46,7 +57,10 @@ def makaleleri_getir():
 articles=makaleleri_getir()
 
 if not articles:
-    st.warning("Herhangi bir içerik bulunamadı")
+    if dil == "TR":
+        st.warning("Herhangi bir içerik bulunamadı.")
+    else:
+        st.warning("No content found.")
 else:
     for a in articles:
         # Dile göre başlık ve içerik seçimi
@@ -60,5 +74,10 @@ else:
         with st.expander(f"{baslik}"):
             st.write(icerik)
 
-st.sidebar.success("Site Durumu: Site stabil bir durumda")
-st.sidebar.info("İçerik Yönetim Dersi")
+# --- Sidebar ---
+if dil == "TR":
+    st.sidebar.success("Site Durumu: Site stabil bir durumda")
+    st.sidebar.info("İçerik Yönetim Dersi")
+else:
+    st.sidebar.success("Site Status: Site is stable")
+    st.sidebar.info("Content Management Course")
