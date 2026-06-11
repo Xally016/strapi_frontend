@@ -13,10 +13,10 @@ st.set_page_config(page_title="Gezi Rehberi", page_icon="🍁", layout="centered
 
 # --- Başlangıç dili ayarı (butonlardan ÖNCE olmalı) ---
 if "dil" not in st.session_state:
-    st.session_state.dil = "TR"
+    st.session_state.dil = "tr"
 
 # --- Başlık ---
-if st.session_state.dil == "TR":
+if st.session_state.dil == "tr":
     st.title("🍁 Dinamik Gezi Rehberi")
     st.markdown("Bu web sitesi **Strapi** ve **Streamlit** kullanılarak oluşturulmuştur.")
 else:
@@ -28,54 +28,49 @@ st.divider()
 # --- Dil Seçimi ---
 col1, col2, col3 = st.columns([1, 1, 2])
 with col1:
-    tr_type = "primary" if st.session_state.dil == "TR" else "secondary"
+    tr_type = "primary" if st.session_state.dil == "tr" else "secondary"
     if st.button("🇹🇷 Türkçe", use_container_width=True, type=tr_type):
-        st.session_state.dil = "TR"
+        st.session_state.dil = "tr"
         st.rerun()
 with col2:
-    en_type = "primary" if st.session_state.dil == "EN" else "secondary"
+    en_type = "primary" if st.session_state.dil == "en" else "secondary"
     if st.button("🇬🇧 English", use_container_width=True, type=en_type):
-        st.session_state.dil = "EN"
+        st.session_state.dil = "en"
         st.rerun()
 with col3:
-    aktif_dil = "🇹🇷 Türkçe" if st.session_state.dil == "TR" else "🇬🇧 English"
-    st.info(f"Aktif dil / Active language: **{aktif_dil}**")
+    aktif_dil = "🇹🇷 Türkçe" if st.session_state.dil == "tr" else "🇬🇧 English"
+    st.info(f"Aktif / Active: **{aktif_dil}**")
 
 st.divider()
 
 dil = st.session_state.dil
 
+# --- Strapi'den locale'e göre içerik çek ---
 @st.cache_data
-def makaleleri_getir():
-    url=f"{BASE_URL}/api/yazis?populate=*"
-    res=requests.get(url, headers=headers)
+def makaleleri_getir(locale: str):
+    url = f"{BASE_URL}/api/yazis?populate=*&locale={locale}"
+    res = requests.get(url, headers=headers)
     if res.ok:
-        ham_veri=res.json().get("data",[])
-        return ham_veri
+        return res.json().get("data", [])
     return []
 
-articles=makaleleri_getir()
+articles = makaleleri_getir(dil)
 
 if not articles:
-    if dil == "TR":
+    if dil == "tr":
         st.warning("Herhangi bir içerik bulunamadı.")
     else:
         st.warning("No content found.")
 else:
     for a in articles:
-        # Dile göre başlık ve içerik seçimi
-        if dil == "TR":
-            baslik = a.get("Baslik", "Başlıksız Makale")
-            icerik = a.get("Icerik2", "İçeriksiz makale")
-        else:  # English
-            baslik = a.get("Title", a.get("Baslik", "Untitled Article"))
-            icerik = a.get("Content", a.get("Icerik2_EN", a.get("Icerik2", "No content available")))
+        baslik = a.get("Baslik", "—")
+        icerik = a.get("Icerik2", "—")
 
         with st.expander(f"{baslik}"):
             st.write(icerik)
 
 # --- Sidebar ---
-if dil == "TR":
+if dil == "tr":
     st.sidebar.success("Site Durumu: Site stabil bir durumda")
     st.sidebar.info("İçerik Yönetim Dersi")
 else:
